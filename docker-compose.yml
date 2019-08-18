@@ -1,0 +1,35 @@
+version: '3.7'
+
+services:
+  web:
+    build: .
+    # command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn cfehome.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/usr/src/
+    expose:
+      - 8000
+    env_file: .env
+    depends_on:
+      - db
+  db:
+    image: postgres:11.5-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file: .env-db
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  nginx:
+    build: ./nginx
+    ports:
+      - "8000:80"
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
